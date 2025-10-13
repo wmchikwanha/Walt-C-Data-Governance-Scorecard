@@ -1,0 +1,5 @@
+{
+  "name": "Data Governance Assessment Tool",
+  "description": "An application for assessing data governance maturity across different departments, featuring role-based access for department heads and senior management, real-time scoring, and visual dashboards.",
+  "requestFramePermissions": []
+}
