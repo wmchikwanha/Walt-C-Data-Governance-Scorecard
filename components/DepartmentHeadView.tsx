@@ -9,17 +9,9 @@ import ProgressBar from './shared/ProgressBar';
 import HistoricalView from './historical/HistoricalView';
 import { useNotification } from '../contexts/NotificationContext';
 import { exportAssessmentsToCsv } from '../lib/csv';
-import { ArrowDownTrayIcon, ArrowPathIcon, ArrowUturnLeftIcon, ClipboardDocumentIcon, SparklesIcon, ClockIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { ArrowDownTrayIcon, ArrowPathIcon, ArrowUturnLeftIcon, SparklesIcon, ClockIcon, CheckIcon } from '@heroicons/react/24/solid';
 import IncompleteSubmissionModal from './assessment/IncompleteSubmissionModal';
-import { GoogleGenAI } from "@google/genai";
-import Modal from './shared/Modal';
-
-interface ActionPlanModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  assessment: Assessment;
-  template: AssessmentTemplate;
-}
+import ActionPlanModal from './assessment/ActionPlanModal';
 
 const formatTime = (seconds: number): string => {
     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -27,122 +19,6 @@ const formatTime = (seconds: number): string => {
     const s = Math.floor(seconds % 60).toString().padStart(2, '0');
     return `${h}:${m}:${s}`;
 }
-
-const ActionPlanModal: React.FC<ActionPlanModalProps> = ({ isOpen, onClose, assessment, template }) => {
-    const [plan, setPlan] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const { addNotification } = useNotification();
-
-    const generatePlan = useCallback(async () => {
-        if (!isOpen) return;
-        setIsLoading(true);
-        setError('');
-        setPlan('');
-
-        try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            
-            const gaps = template.dimensions.map(dim => {
-                const dimScore = assessment.scores.find(s => s.dimensionId === dim.id);
-                if (!dimScore) return null;
-
-                const weakResponses = dimScore.responses.filter(
-                    r => r.response === ResponseValue.NO || r.response === ResponseValue.WIP
-                );
-
-                if (weakResponses.length === 0) return null;
-
-                return {
-                    dimensionName: dim.name,
-                    questions: weakResponses.map(r => {
-                        const question = dim.subQuestions.find(sq => sq.id === r.subQuestionId);
-                        return {
-                            text: question?.text,
-                            response: r.response,
-                        }
-                    }).filter(q => q.text)
-                }
-            }).filter((g): g is NonNullable<typeof g> => g !== null && g.questions.length > 0);
-            
-            if (gaps.length === 0) {
-                 setPlan("Great job! No significant gaps were found in your assessment. Continue to maintain your high standards in data governance.");
-                 setIsLoading(false);
-                 return;
-            }
-
-            const prompt = `
-You are an expert data governance consultant. Your task is to create a practical, actionable 90-day improvement plan for a department based on their self-assessment results.
-
-Department Name: ${assessment.departmentName}
-Assessment Period: ${assessment.period}
-
-Here are the areas where the department identified gaps (answered 'No' or 'Work in Progress'):
-${gaps.map(gap => `
-Dimension: ${gap.dimensionName}
-${gap.questions.map(q => `- Question: ${q.text} (Answer: ${q.response})`).join('\n')}
-`).join('')}
-
-Based on these gaps, generate a structured 90-day action plan. The plan should be divided into three phases: Days 1-30, Days 31-60, and Days 61-90. For each phase, provide specific, actionable steps with clear owners (e.g., 'Department Head', 'Data Steward', 'IT Support') and measurable outcomes. The tone should be encouraging and professional. Format the output using markdown for clarity, including headings, bold text, and bullet points.
-            `;
-
-            const response = await ai.models.generateContent({
-              model: 'gemini-2.5-flash',
-              contents: prompt,
-            });
-
-            setPlan(response.text);
-
-        } catch (e) {
-            console.error("Error generating action plan:", e);
-            setError("Failed to generate the action plan. Please check your connection or try again later.");
-            addNotification({ message: 'Error generating action plan.', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [isOpen, assessment, template, addNotification]);
-    
-    useEffect(() => {
-        if (isOpen) {
-            generatePlan();
-        }
-    }, [isOpen, generatePlan]);
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(plan);
-        addNotification({ message: 'Action plan copied to clipboard!', type: 'success' });
-    }
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="AI-Generated Action Plan">
-            {isLoading && (
-                <div className="text-center p-8 animate-fadeIn">
-                    <SparklesIcon className="h-12 w-12 text-brand-secondary mx-auto animate-pulse" />
-                    <p className="mt-4 text-lg font-semibold text-gray-700">Generating your 90-day roadmap...</p>
-                    <p className="text-sm text-gray-500 mt-1">Our AI is analyzing your assessment gaps to create a tailored plan.</p>
-                </div>
-            )}
-            {error && <div className="text-center p-8 text-red-600 bg-red-50 rounded-lg">{error}</div>}
-            {!isLoading && !error && plan && (
-                <div className="animate-fadeIn">
-                    <div className="max-h-[60vh] overflow-y-auto p-4 bg-slate-50 rounded-md border text-gray-800">
-                        <pre className="whitespace-pre-wrap font-sans text-sm">{plan}</pre>
-                    </div>
-                    <div className="mt-6 flex justify-between items-center">
-                         <p className="text-xs text-gray-500 italic">Powered by Gemini</p>
-                         <button
-                            onClick={handleCopy}
-                            className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 transition-transform active:scale-95"
-                        >
-                           <ClipboardDocumentIcon className="h-5 w-5 mr-2" />
-                            Copy Plan
-                        </button>
-                    </div>
-                </div>
-            )}
-        </Modal>
-    );
-};
 
 const DepartmentHeadView: React.FC = () => {
   const { user } = useAuth();
@@ -158,6 +34,7 @@ const DepartmentHeadView: React.FC = () => {
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const [isActionPlanModalOpen, setIsActionPlanModalOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   
   // Timer state
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -267,6 +144,55 @@ const DepartmentHeadView: React.FC = () => {
           addNotification({ message: 'Unsaved changes have been discarded.', type: 'info' });
       }
   }, [initialAssessment, addNotification]);
+  
+    const handleAutoSave = useCallback(async () => {
+    if (!assessment) return;
+
+    setAutoSaveStatus('saving');
+    const assessmentToSave = { ...assessment };
+
+    try {
+        const savedAssessmentResponse = await api.saveAssessment(assessmentToSave);
+        
+        // The response is the new source of truth for the saved state.
+        setInitialAssessment(savedAssessmentResponse);
+        
+        // Update current assessment with new 'lastSaved' time without overwriting user edits during save
+        setAssessment(currentAssessment => {
+            if (!currentAssessment) return null;
+            // If the state hasn't changed since we started saving, we can use the response directly.
+            if (JSON.stringify(currentAssessment.scores) === JSON.stringify(assessmentToSave.scores)) {
+                return savedAssessmentResponse;
+            }
+            // Otherwise, merge `lastSaved` into the current state.
+            return { ...currentAssessment, lastSaved: savedAssessmentResponse.lastSaved };
+        });
+        
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 3000); // Show 'saved' message for 3 seconds
+    } catch (error) {
+        console.error("Auto-save failed", error);
+        setAutoSaveStatus('idle'); // Revert to idle on failure
+        addNotification({ message: 'Auto-save failed. Please save manually.', type: 'error' });
+    }
+  }, [assessment, addNotification]);
+
+  const autoSaveCallback = useRef(handleAutoSave);
+
+  useEffect(() => {
+    autoSaveCallback.current = handleAutoSave;
+  }, [handleAutoSave]);
+
+  useEffect(() => {
+    if (assessment?.status === 'Draft' && hasUnsavedChanges) {
+        const intervalId = setInterval(() => {
+            autoSaveCallback.current();
+        }, 60000); // 60 seconds
+
+        return () => clearInterval(intervalId);
+    }
+  }, [hasUnsavedChanges, assessment?.status]);
+
 
   const handleSave = useCallback(async (isSubmit = false, submissionNotes?: string) => {
     if (!assessment) return;
@@ -355,13 +281,33 @@ const DepartmentHeadView: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                 {assessment.departmentName} Scorecard - {assessment.period}
             </h1>
-            <p className="text-gray-500 mt-1 flex items-center flex-wrap">
+            <p className="text-gray-500 mt-1 flex items-center flex-wrap gap-x-2">
                 <span>Status: <span className="font-semibold">{assessment.status}</span></span>
-                <span className="mx-2 hidden sm:inline">|</span>
+                <span className="hidden sm:inline">|</span>
                 <span>Last saved: {new Date(assessment.lastSaved).toLocaleString()}</span>
-                {hasUnsavedChanges && <span className="ml-2 font-semibold text-amber-600 animate-fadeIn">(unsaved changes)</span>}
+                
+                <span className="w-44 text-left">
+                    {autoSaveStatus === 'saving' && (
+                        <span className="text-sm text-gray-500 animate-pulse flex items-center">
+                            <ArrowPathIcon className="h-4 w-4 mr-1 animate-spin" />
+                            Auto-saving...
+                        </span>
+                    )}
+                    {autoSaveStatus === 'saved' && (
+                        <span className="text-sm text-green-600 animate-fadeIn flex items-center">
+                            <CheckIcon className="h-4 w-4 mr-1" />
+                            Progress auto-saved.
+                        </span>
+                    )}
+                    {autoSaveStatus === 'idle' && hasUnsavedChanges && (
+                        <span className="font-semibold text-amber-600 animate-fadeIn text-sm">
+                        (unsaved changes)
+                        </span>
+                    )}
+                </span>
+
                 {elapsedTime > 0 && assessment.status === 'Draft' && (
-                    <span className="ml-2 flex items-center text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-0.5 rounded-full animate-fadeIn">
+                    <span className="flex items-center text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-0.5 rounded-full animate-fadeIn">
                         <ClockIcon className="h-4 w-4 mr-1"/> {formatTime(elapsedTime)}
                     </span>
                 )}
