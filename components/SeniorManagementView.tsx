@@ -410,7 +410,7 @@ const SeniorManagementView: React.FC = () => {
             setAssessmentToDelete(null);
             fetchData();
         } catch (error) {
-// FIX: The `error` object from a catch block is of type `unknown`. Check if it's an instance of `Error` before accessing its `message` property to prevent a type error.
+            // Fix: The `error` object from a catch block is of type `unknown`. Check if it's an instance of `Error` before accessing its `message` property to prevent a type error.
             const message = error instanceof Error ? error.message : 'Failed to delete assessment.';
             addNotification({ message, type: 'error' });
         } finally {

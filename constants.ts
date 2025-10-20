@@ -3,18 +3,19 @@ import { Dimension, ResponseValue } from './types';
 export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
   {
     id: 1,
-    name: 'Do We Know the Rules?',
+    name: 'Do We Know the Rules?', // Policy, Training & Compliance
     subQuestions: [
       { id: 1, text: 'Have 80%+ of staff completed mandatory data governance training in the last 12 months?' },
-      { id: 2, text: 'Are relevant industry and sector data regulations documented and accessible to all staff?' },
-      { id: 3, text: 'Is there a Data Risk Register that is reviewed at least quarterly?' },
-      { id: 4, text: 'Are new staff onboarded with data governance training within their first month?' },
-      { id: 5, text: 'Do staff know who to contact for data governance questions?' },
+      { id: 2, text: 'Is there a documented process for identifying and staying current with applicable data regulations (e.g., GDPR, CCPA, HIPAA)?' },
+      { id: 3, text: 'Is compliance with these regulations regularly audited or reviewed?' },
+      { id: 4, text: 'Is there a Data Risk Register that is reviewed at least quarterly?' },
+      { id: 5, text: 'Are new staff onboarded with data governance training within their first month?' },
+      { id: 6, text: 'Do staff know who to contact for data governance questions?' },
     ],
   },
   {
     id: 2,
-    name: 'What Data Do We Have?',
+    name: 'What Data Do We Have?', // Data Lifecycle & Inventory
     subQuestions: [
       { id: 1, text: 'Do you have an up-to-date inventory of all digital data records your department holds?' },
       { id: 2, text: 'Do you have an up-to-date inventory of all physical data records your department holds?' },
@@ -25,7 +26,7 @@ export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
   },
   {
     id: 3,
-    name: 'Where Is Our Data Sitting?',
+    name: 'Where Is Our Data Sitting?', // Data Location & Flow
     subQuestions: [
         { id: 1, text: "Have you listed all systems (cloud, on-premise, 3rd party) where your department's data resides?" },
         { id: 2, text: 'Do you have data flow diagrams showing internal data movement within your department?' },
@@ -36,7 +37,7 @@ export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
   },
   {
     id: 4,
-    name: 'Who Owns What Data?',
+    name: 'Who Owns What Data?', // Ownership & Stewardship
     subQuestions: [
         { id: 1, text: 'Is there a named data owner/steward for each major data asset in your department?' },
         { id: 2, text: 'Do data owners have documented responsibilities and authority?' },
@@ -47,19 +48,19 @@ export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
   },
   {
     id: 5,
-    name: 'Who Can Access Our Data?',
+    name: 'Who Can Access Our Data?', // Security & Access Control
     subQuestions: [
-        { id: 1, text: 'Are all data assets classified by sensitivity (e.g., Public, Internal, Confidential)?' },
-        { id: 2, text: 'Is access to sensitive data controlled by role-based permissions?' },
-        { id: 3, text: 'Are access permissions reviewed at least quarterly to remove inappropriate access?' },
-        { id: 4, text: 'Are all access requests formally logged and approved?' },
-        { id: 5, text: 'Is there segregation of duties for highly sensitive data (no single person has complete access)?' },
-        { id: 6, text: 'Are all data assets classified by sensitivity (e.g., Public, Internal, Confidential)?' },
+        { id: 1, text: 'Is there a formally approved Data Classification Policy?' },
+        { id: 2, text: 'Is this policy actively applied to 90%+ of your department\'s data assets?' },
+        { id: 3, text: 'Is access to sensitive data controlled by role-based permissions?' },
+        { id: 4, text: 'Are access permissions reviewed at least quarterly to remove inappropriate access?' },
+        { id: 5, text: 'Are all access requests formally logged and approved?' },
+        { id: 6, text: 'Is there segregation of duties for highly sensitive data (no single person has complete access)?' },
     ],
   },
   {
     id: 6,
-    name: 'How Clean Is Our Data?',
+    name: 'How Clean Is Our Data?', // Data Quality
     subQuestions: [
         { id: 1, text: "Are data quality standards defined for your department's key data assets?" },
         { id: 2, text: 'Do you have processes to measure data quality (accuracy, completeness, consistency)?' },
@@ -70,13 +71,32 @@ export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
   },
   {
     id: 7,
-    name: 'Are We Processing It Ethically?',
+    name: 'How Is Our Data Structured & Defined?', // Architecture & Standards
+    subQuestions: [
+        { id: 1, text: 'Is there a Business Glossary or Data Dictionary that defines key business terms and metrics?' },
+        { id: 2, text: 'Do you follow a Master Data Management (MDM) strategy for critical data like \'Customer\' or \'Product\'?' },
+        { id: 3, text: 'Are data models (logical and physical) documented and maintained for key systems?' },
+        { id: 4, text: 'Is there a defined process for managing and using reference data (e.g., country codes, status types) consistently across systems?' },
+    ],
+  },
+  {
+    id: 8,
+    name: 'Are We Processing It Ethically?', // Ethics & Privacy
     subQuestions: [
         { id: 1, text: 'Do you conduct Data Protection Impact Assessments (DPIAs) for new data processing activities?' },
         { id: 2, text: 'Are privacy and ethical considerations reviewed for all new technology initiatives?' },
         { id: 3, text: 'Do you apply Data Protection by Design principles in new systems/processes?' },
         { id: 4, text: 'Do you have clear procedures for responding to data breaches or incidents?' },
         { id: 5, text: 'Can data subjects (people whose data you hold) easily exercise their rights (access, correction, deletion)?' },
+    ],
+  },
+  {
+    id: 9,
+    name: 'How Do We Measure Success & Value?', // Metrics & Value
+    subQuestions: [
+        { id: 1, text: 'Are there defined Key Performance Indicators (KPIs) to measure the effectiveness of our data governance program?' },
+        { id: 2, text: 'Do we track the business impact of data quality improvements (e.g., cost savings, revenue increase, risk reduction)?' },
+        { id: 3, text: 'Is there a formal process to identify opportunities for leveraging data as a strategic asset?' },
     ],
   },
 ];
