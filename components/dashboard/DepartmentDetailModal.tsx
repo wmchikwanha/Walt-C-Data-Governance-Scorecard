@@ -18,7 +18,7 @@ const DepartmentDetailModal: React.FC<DepartmentDetailModalProps> = ({ isOpen, o
 
   const dimensionDetails = template.dimensions.map(dim => {
     const dimScoreData = assessment.scores.find(s => s.dimensionId === dim.id);
-    const score = dimScoreData ? calculateDimensionScore(dimScoreData.responses) : null;
+    const score = dimScoreData ? calculateDimensionScore(dimScoreData) : null;
     const { colorClass } = getScoreAndColor(score);
     return {
       name: dim.name,

@@ -29,6 +29,7 @@ export interface Dimension {
   id: number;
   name: string;
   subQuestions: SubQuestion[];
+  retentionPolicy?: string;
 }
 
 export interface AssessmentTemplate {
@@ -47,6 +48,7 @@ export interface DimensionScore {
   dimensionId: number;
   responses: SubQuestionResponse[];
   comments: string;
+  overriddenScore?: number;
 }
 
 export interface Assessment {
@@ -58,6 +60,8 @@ export interface Assessment {
   scores: DimensionScore[];
   templateId: string;
   submissionNotes?: string;
+  duration?: number; // in seconds
+  dueDate?: string; // ISO Date string
 }
 
 export interface ChangeLogEntry {
@@ -88,6 +92,7 @@ export interface HeatmapData {
     scores: Map<string, ScoreAndColor>; // Changed from array to map keyed by dimension name
     historicalOverallScores: number[];
     overallScore: number;
+    trend: 'improving' | 'declining' | 'stable' | 'new';
 }
 
 export type NotificationType = 'success' | 'error' | 'info';
@@ -96,4 +101,14 @@ export interface Notification {
   id: string;
   message: string;
   type: NotificationType;
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  senderName: string;
+  subject: string;
+  message: string;
+  timestamp: string; // ISO Date string
+  read: boolean;
 }

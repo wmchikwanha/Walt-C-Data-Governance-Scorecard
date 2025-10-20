@@ -49,7 +49,7 @@ const CircularScorecard: React.FC<CircularScorecardProps> = ({ dimensions, score
   const dimensionScoresAndColors = useMemo<ScoreAndColor[]>(() => {
     return dimensions.map(dim => {
       const dimScoreData = scores.find(s => s.dimensionId === dim.id);
-      const scoreValue = dimScoreData ? calculateDimensionScore(dimScoreData.responses) : null;
+      const scoreValue = dimScoreData ? calculateDimensionScore(dimScoreData) : null;
       return getScoreAndColor(scoreValue);
     });
   }, [dimensions, scores]);
@@ -74,6 +74,13 @@ const CircularScorecard: React.FC<CircularScorecardProps> = ({ dimensions, score
     Locked: 'bg-gray-200 text-gray-800',
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent, dimensionId: number) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onSegmentClick(dimensionId);
+    }
+  };
+
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
@@ -83,12 +90,11 @@ const CircularScorecard: React.FC<CircularScorecardProps> = ({ dimensions, score
                 {/* Background circle to show where unanswered segments are */}
                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f0f0f0" strokeWidth="20" />
                 {dimensionScoresAndColors.map((score, index) => {
-                    const rotation = (360 / totalSegments) * index;
                     const dimensionId = dimensions[index].id;
                     return (
                         <ScorecardSegment
                             key={index}
-                            rotation={rotation}
+                            rotation={(360 / totalSegments) * index}
                             strokeDasharray={strokeDasharray}
                             color={score.color}
                             isActive={activeDimensionId === dimensionId}
@@ -131,15 +137,19 @@ const CircularScorecard: React.FC<CircularScorecardProps> = ({ dimensions, score
                             key={dim.id}
                             role="option"
                             aria-selected={isActive}
+                            tabIndex={0}
                             onClick={() => onSegmentClick(dim.id)}
-                            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                            onFocus={() => setHoveredSegment(index)}
+                            onBlur={() => setHoveredSegment(null)}
+                            onKeyDown={(e) => handleKeyDown(e, dim.id)}
+                            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary ${
                                 isActive
                                     ? 'bg-blue-100 text-brand-primary shadow-inner'
                                     : 'text-gray-700 hover:bg-slate-100 hover:scale-[1.02] active:scale-95'
                             }`}
                         >
                            <div className="flex items-center">
-                             <span className={`w-3 h-3 rounded-full mr-3 flex-shrink-0 ${dimensionScoresAndColors[index].colorClass}`}></span>
+                             <span className={`w-3 h-3 rounded-full mr-3 flex-shrink-0 ${dimensionScoresAndColors[index].colorClass}`} aria-hidden="true"></span>
                              <span className={`text-sm font-semibold truncate ${isActive ? 'text-brand-primary' : 'text-gray-800'}`}>{dim.name}</span>
                            </div>
                            <span className={`text-sm font-bold ml-2 ${isActive ? 'text-brand-primary' : 'text-gray-600'}`}>

@@ -8,12 +8,21 @@ import {
   AssessmentTemplate,
   SubQuestionResponse,
   DimensionScore,
-  ChangeLogEntry
+  ChangeLogEntry,
+  AppNotification
 } from './types';
 import { DEFAULT_DIMENSIONS_DATA } from './constants';
 import { comparePeriods } from './lib/scoring';
 
 // --- SEED DATA ---
+
+const getFutureDueDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return d;
+}
+const salesDueDate = getFutureDueDate();
+
 
 const SEED_USERS: User[] = [
   { id: 'user-1', name: 'Alice Johnson', email: 'alice.j@example.com', role: UserRole.DEPARTMENT_HEAD, departmentName: 'Sales' },
@@ -65,6 +74,8 @@ const SEED_ASSESSMENTS: Assessment[] = [
     lastSaved: new Date('2023-12-15T10:00:00Z').toISOString(),
     scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
     templateId: 'template-default-q1-2024',
+    duration: 3600 + (Math.random() * 1800), // 1hr - 1.5hr
+    dueDate: new Date('2023-12-20T23:59:59Z').toISOString(),
   },
   {
     id: 'assessment-2',
@@ -74,6 +85,8 @@ const SEED_ASSESSMENTS: Assessment[] = [
     lastSaved: new Date('2024-03-20T14:30:00Z').toISOString(),
     scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
     templateId: 'template-default-q1-2024',
+    duration: 3200 + (Math.random() * 1200), // 53min - 1hr 13min
+    dueDate: new Date('2024-03-22T23:59:59Z').toISOString(),
   },
   // Sales - 1 period
   {
@@ -84,6 +97,7 @@ const SEED_ASSESSMENTS: Assessment[] = [
     lastSaved: new Date().toISOString(),
     scores: createInitialScores(DEFAULT_DIMENSIONS_DATA),
     templateId: 'template-default-q1-2024',
+    dueDate: salesDueDate.toISOString(),
   },
    // Human Resources - 1 submitted with notes
   {
@@ -103,7 +117,9 @@ const SEED_ASSESSMENTS: Assessment[] = [
         return ds;
     }),
     templateId: 'template-default-q1-2024',
-    submissionNotes: 'Submitted incomplete due to key personnel being on leave. Will finalize next quarter.'
+    submissionNotes: 'Submitted incomplete due to key personnel being on leave. Will finalize next quarter.',
+    duration: 5500 + (Math.random() * 2000), // ~1.5 - 2 hrs
+    dueDate: new Date('2024-03-20T23:59:59Z').toISOString(),
   },
 ];
 
@@ -115,6 +131,27 @@ const SEED_CHANGELOG: ChangeLogEntry[] = [
         user: 'Diana Prince',
         changeDescription: 'Locked assessment for Engineering',
         period: 'Q4 2023',
+    }
+];
+
+const SEED_NOTIFICATIONS: AppNotification[] = [
+    {
+        id: 'notif-1',
+        userId: 'user-2', // For Bob Williams (Engineering)
+        senderName: 'Diana Prince',
+        subject: 'Q1 2024 Assessment Review',
+        message: 'Hi Bob, please take a look at the comments on the "How Clean Is Our Data?" dimension and provide feedback by EOD Friday. Thanks!',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        read: false,
+    },
+    {
+        id: 'notif-2',
+        userId: 'user-1', // Alice Johnson (Sales)
+        senderName: 'System Automation',
+        subject: 'Reminder: Assessment Due Soon',
+        message: `Your assessment for the Sales department is due on ${salesDueDate.toLocaleDateString()}. Please ensure it is submitted on time.`,
+        timestamp: new Date().toISOString(),
+        read: false,
     }
 ];
 
@@ -148,6 +185,7 @@ const DB_KEYS = {
   TEMPLATES: 'db_templates',
   ASSESSMENTS: 'db_assessments',
   CHANGELOG: 'db_changelog',
+  NOTIFICATIONS: 'db_notifications',
 };
 
 // Initialize DB
@@ -155,6 +193,8 @@ db.getItem(DB_KEYS.USERS, SEED_USERS);
 db.getItem(DB_KEYS.TEMPLATES, SEED_TEMPLATES);
 db.getItem(DB_KEYS.ASSESSMENTS, SEED_ASSESSMENTS);
 db.getItem(DB_KEYS.CHANGELOG, SEED_CHANGELOG);
+db.getItem(DB_KEYS.NOTIFICATIONS, SEED_NOTIFICATIONS);
+
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -336,6 +376,12 @@ export const api = {
       return changelog.filter(c => c.changeDescription.includes(departmentName)).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   },
 
+  async getAllChangelogEntries(): Promise<ChangeLogEntry[]> {
+    await delay(400);
+    const changelog = db.getItem<ChangeLogEntry>(DB_KEYS.CHANGELOG, SEED_CHANGELOG);
+    return [...changelog].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  },
+
   async createUser(newUser: Omit<User, 'id'>): Promise<User> {
     await delay(500);
     const users = db.getItem<User>(DB_KEYS.USERS, SEED_USERS);
@@ -365,5 +411,41 @@ export const api = {
     assessments.push(newAssessment);
     db.setItem(DB_KEYS.ASSESSMENTS, assessments);
     return newAssessment;
+  },
+
+  // --- Notification API ---
+
+  async getNotificationsForUser(userId: string): Promise<AppNotification[]> {
+      await delay(200);
+      const allNotifications = db.getItem<AppNotification>(DB_KEYS.NOTIFICATIONS, SEED_NOTIFICATIONS);
+      return allNotifications
+        .filter(n => n.userId === userId)
+        .sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  },
+
+  async createNotification(notificationData: Omit<AppNotification, 'id' | 'timestamp' | 'read'>): Promise<AppNotification> {
+    await delay(400);
+    const notifications = db.getItem<AppNotification>(DB_KEYS.NOTIFICATIONS, SEED_NOTIFICATIONS);
+    const newNotification: AppNotification = {
+        ...notificationData,
+        id: `notif-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+    };
+    notifications.unshift(newNotification);
+    db.setItem(DB_KEYS.NOTIFICATIONS, notifications);
+    return newNotification;
+  },
+
+  async markNotificationsAsRead(userId: string, notificationIds: string[]): Promise<void> {
+    await delay(100);
+    const notifications = db.getItem<AppNotification>(DB_KEYS.NOTIFICATIONS, SEED_NOTIFICATIONS);
+    const updatedNotifications = notifications.map(n => {
+        if (n.userId === userId && notificationIds.includes(n.id)) {
+            return { ...n, read: true };
+        }
+        return n;
+    });
+    db.setItem(DB_KEYS.NOTIFICATIONS, updatedNotifications);
   }
 };

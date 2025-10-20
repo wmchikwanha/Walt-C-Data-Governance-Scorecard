@@ -76,7 +76,7 @@ const TemplateManagement: React.FC = () => {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Assessment Templates</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Assessment Templates</h1>
                 <button
                     onClick={handleCreateNew}
                     className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"

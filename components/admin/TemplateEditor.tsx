@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AssessmentTemplate, Dimension, SubQuestion } from '../../types';
 import { api } from '../../data';
@@ -11,13 +10,10 @@ interface TemplateEditorProps {
     onCancel: () => void;
 }
 
-// FIX: Updated new item creation to use temporary negative IDs to conform to types.
 const newSubQuestion = (): SubQuestion => ({ id: -(Date.now() * Math.random()), text: '' });
-// FIX: Updated new item creation to use temporary negative IDs to conform to types.
-const newDimension = (): Dimension => ({ id: -(Date.now() * Math.random()), name: '', subQuestions: [newSubQuestion()] });
+const newDimension = (): Dimension => ({ id: -(Date.now() * Math.random()), name: '', subQuestions: [newSubQuestion()], retentionPolicy: '' });
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave, onCancel }) => {
-    // FIX: The `useState` call is now type-safe as `newDimension()` returns a valid `Dimension`.
     const [formData, setFormData] = useState<Partial<AssessmentTemplate>>(template || { name: '', description: '', dimensions: [newDimension()] });
     const [isSaving, setIsSaving] = useState(false);
     const { addNotification } = useNotification();
@@ -29,6 +25,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave, onCan
     const handleDimensionChange = (dimIndex: number, newName: string) => {
         const newDimensions = [...(formData.dimensions || [])];
         newDimensions[dimIndex].name = newName;
+        setFormData({ ...formData, dimensions: newDimensions });
+    };
+
+    const handleRetentionPolicyChange = (dimIndex: number, newPolicy: string) => {
+        const newDimensions = [...(formData.dimensions || [])];
+        newDimensions[dimIndex].retentionPolicy = newPolicy;
         setFormData({ ...formData, dimensions: newDimensions });
     };
 
@@ -50,7 +52,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave, onCan
 
     const addQuestion = (dimIndex: number) => {
         const newDimensions = [...(formData.dimensions || [])];
-        // FIX: Pushing a valid `SubQuestion` object, resolving type error.
         newDimensions[dimIndex].subQuestions.push(newSubQuestion());
         setFormData({ ...formData, dimensions: newDimensions });
     };
@@ -66,7 +67,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave, onCan
         setIsSaving(true);
         try {
             // Re-assign stable IDs on save
-            // FIX: Updated save logic to handle temporary negative IDs.
             const finalDimensions = formData.dimensions?.map((dim, dimIndex) => ({
                 ...dim,
                 id: dim.id > 0 ? dim.id : dimIndex + 1, // Use existing positive ID or generate new one
@@ -115,17 +115,26 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave, onCan
             </div>
 
             {formData.dimensions?.map((dim, dimIndex) => (
-                // FIX: Use `dim.id` for the key, which is now always a unique number.
                 <div key={dim.id} className="p-6 bg-white rounded-lg shadow-sm border animate-fadeInUp">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-2">
                         <input type="text" placeholder={`Dimension ${dimIndex + 1} Name`} required value={dim.name} onChange={(e) => handleDimensionChange(dimIndex, e.target.value)} className="text-lg font-semibold text-gray-800 border-b-2 w-full focus:outline-none focus:border-brand-primary" />
                         <button type="button" onClick={() => removeDimension(dimIndex)} className="ml-4 p-1 text-gray-400 hover:text-status-red">
                             <TrashIcon className="h-5 w-5" />
                         </button>
                     </div>
-                    <div className="space-y-3">
+                     <div className="mb-4 mt-4">
+                        <label htmlFor={`retention-${dim.id}`} className="block text-sm font-medium text-gray-500">Data Retention Policy</label>
+                        <input
+                            type="text"
+                            id={`retention-${dim.id}`}
+                            placeholder="e.g., 7 years, Indefinite"
+                            value={dim.retentionPolicy || ''}
+                            onChange={(e) => handleRetentionPolicyChange(dimIndex, e.target.value)}
+                            className="mt-1 block w-full sm:text-sm border-gray-300 rounded-md shadow-sm"
+                        />
+                    </div>
+                    <div className="space-y-3 pt-4 border-t">
                         {dim.subQuestions.map((sq, qIndex) => (
-                            // FIX: Use `sq.id` for the key. `tempId` is no longer needed.
                             <div key={sq.id} className="flex items-center space-x-2">
                                 <span className="text-gray-500">{qIndex + 1}.</span>
                                 <input type="text" placeholder="Enter question text" required value={sq.text} onChange={(e) => handleQuestionChange(dimIndex, qIndex, e.target.value)} className="block w-full sm:text-sm border-gray-300 rounded-md shadow-sm" />

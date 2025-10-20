@@ -73,6 +73,17 @@ const UserManagement: React.FC = () => {
     };
 
     const handleSave = async (user: EditableUser) => {
+        if (!user.name || user.name.trim() === '') {
+            addNotification({ message: 'Name cannot be empty.', type: 'error' });
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user.email)) {
+            addNotification({ message: 'Please enter a valid email address.', type: 'error' });
+            return;
+        }
+
         try {
             await api.updateUser(user.id, { name: user.name, email: user.email });
             addNotification({ message: 'User updated successfully.', type: 'success' });
@@ -106,11 +117,21 @@ const UserManagement: React.FC = () => {
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsCreating(true);
-
-        // FIX: Destructure required fields and explicitly create the user object
-        // to satisfy the `Omit<User, 'id'>` type, as form inputs are 'required'.
+        
         const { role, departmentName, name, email } = newUser;
+        
+        if (!name || name.trim() === '') {
+            addNotification({ message: 'Name cannot be empty.', type: 'error' });
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            addNotification({ message: 'Please enter a valid email address.', type: 'error' });
+            return;
+        }
+
+        setIsCreating(true);
 
         const userToCreate: Omit<User, 'id'> = {
             name: name!,
@@ -121,6 +142,15 @@ const UserManagement: React.FC = () => {
 
         try {
             const createdUser = await api.createUser(userToCreate);
+            
+            // Send welcome notification
+            await api.createNotification({
+                userId: createdUser.id,
+                senderName: 'System',
+                subject: 'Welcome to the Data Governance Scorecard!',
+                message: 'Your account has been created. You can now access your dashboard and begin your first assessment.'
+            });
+
             if (createdUser.role === UserRole.DEPARTMENT_HEAD && createdUser.departmentName) {
                 await api.createAssessmentForNewDepartment(
                     createdUser.departmentName,
@@ -148,7 +178,7 @@ const UserManagement: React.FC = () => {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Manage Users</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Manage Users</h1>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"

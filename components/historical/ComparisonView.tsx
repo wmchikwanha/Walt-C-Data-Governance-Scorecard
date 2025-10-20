@@ -42,7 +42,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ assessmentsWithTemplate
                 const matchingDim = template.dimensions.find(d => d.name === masterDim.name);
                 const dimScoreData = matchingDim ? assessment.scores.find(s => s.dimensionId === matchingDim.id) : undefined;
                 
-                const score = dimScoreData ? calculateDimensionScore(dimScoreData.responses) : null;
+                const score = dimScoreData ? calculateDimensionScore(dimScoreData) : null;
                 const { colorClass } = getScoreAndColor(score);
 
                 let trend: 'up' | 'down' | 'same' | null = null;
@@ -50,7 +50,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ assessmentsWithTemplate
                     const prevData = assessmentsWithTemplates[index-1];
                     const prevMatchingDim = prevData.template.dimensions.find(d => d.name === masterDim.name);
                     const prevDimScoreData = prevMatchingDim ? prevData.assessment.scores.find(s => s.dimensionId === prevMatchingDim.id) : undefined;
-                    const prevScore = prevDimScoreData ? calculateDimensionScore(prevDimScoreData.responses) : null;
+                    const prevScore = prevDimScoreData ? calculateDimensionScore(prevDimScoreData) : null;
 
                     if (score !== null && prevScore !== null) {
                         if(score > prevScore) trend = 'up';
@@ -82,7 +82,8 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ assessmentsWithTemplate
 
   return (
     <div>
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="overflow-x-auto hidden md:block">
             <table className="min-w-full divide-y divide-gray-200 border">
                 <thead className="bg-slate-50">
                     <tr>
@@ -113,6 +114,29 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ assessmentsWithTemplate
                 </tbody>
             </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+            {comparisonData.map(row => (
+                <div key={row.dimensionName} className="bg-white rounded-lg shadow p-4 border">
+                    <h3 className="font-bold text-gray-800 mb-3">{row.dimensionName}</h3>
+                    <div className="flex space-x-4 overflow-x-auto pb-2 -mx-4 px-4">
+                        {row.scores.map((scoreInfo, index) => (
+                            <div key={periods[index]} className="flex-shrink-0 text-center p-2 bg-slate-50 rounded-lg min-w-[80px]">
+                                <p className="text-xs font-semibold text-gray-500">{periods[index]}</p>
+                                <div className="flex items-center justify-center space-x-1 mt-1">
+                                    <span className={`font-bold px-2 py-1 rounded-sm ${scoreInfo.colorClass} text-white text-xs`}>
+                                        {scoreInfo.rawScore !== null ? `${scoreInfo.score.toFixed(0)}%` : 'N/A'}
+                                    </span>
+                                    <TrendIndicator trend={scoreInfo.trend} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+
         <div className="mt-6 text-right">
              <button onClick={onShowChangelog} className="text-sm font-semibold text-brand-primary hover:underline">
                 View Detailed Changelog &rarr;

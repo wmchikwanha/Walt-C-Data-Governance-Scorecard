@@ -1,4 +1,3 @@
-
 import { Dimension, ResponseValue } from './types';
 
 export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
@@ -55,6 +54,7 @@ export const DEFAULT_DIMENSIONS_DATA: Dimension[] = [
         { id: 3, text: 'Are access permissions reviewed at least quarterly to remove inappropriate access?' },
         { id: 4, text: 'Are all access requests formally logged and approved?' },
         { id: 5, text: 'Is there segregation of duties for highly sensitive data (no single person has complete access)?' },
+        { id: 6, text: 'Are all data assets classified by sensitivity (e.g., Public, Internal, Confidential)?' },
     ],
   },
   {

@@ -1,11 +1,11 @@
-
 // FIX: Replaced placeholder content with the AdminView component implementation.
 import React, { useState } from 'react';
 import UserManagement from './admin/UserManagement';
 import TemplateManagement from './admin/TemplateManagement';
-import { UserGroupIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import AuditLogView from './admin/AuditLogView';
+import { UserGroupIcon, DocumentTextIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 
-type AdminViewTab = 'users' | 'templates';
+type AdminViewTab = 'users' | 'templates' | 'audit';
 
 const AdminView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<AdminViewTab>('users');
@@ -13,6 +13,7 @@ const AdminView: React.FC = () => {
     const tabs = [
         { id: 'users', name: 'User Management', icon: UserGroupIcon },
         { id: 'templates', name: 'Template Management', icon: DocumentTextIcon },
+        { id: 'audit', name: 'Audit Log', icon: ClipboardDocumentListIcon },
     ];
 
     return (
@@ -46,6 +47,7 @@ const AdminView: React.FC = () => {
                 <div>
                     {activeTab === 'users' && <UserManagement />}
                     {activeTab === 'templates' && <TemplateManagement />}
+                    {activeTab === 'audit' && <AuditLogView />}
                 </div>
             </div>
         </div>
@@ -53,4 +55,3 @@ const AdminView: React.FC = () => {
 };
 
 export default AdminView;
-

@@ -12,9 +12,9 @@
           extend: {
             colors: {
               'brand-primary': '#00529B',
-              'brand-secondary': '#00A4E4',
+              'brand-secondary': '#0082B6',
               'status-green': '#28a745',
-              'status-amber': '#ffc107',
+              'status-amber': '#D97706',
               'status-red': '#dc3545',
             },
           },
@@ -28,7 +28,8 @@
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/"
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0"
   }
 }
 </script>
@@ -46,6 +47,69 @@
   }
   .animate-fadeInUp {
     animation: fadeInUp 0.4s ease-in-out;
+  }
+  @media print {
+    body {
+      background-color: white !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+    .printable-area,
+    .printable-area * {
+      visibility: visible;
+    }
+    .printable-area {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      right: 20px;
+      width: auto;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+      font-size: 10px; /* Smaller font for printing */
+    }
+    th, td {
+      border: 1px solid #ddd !important;
+      padding: 4px !important;
+    }
+    th {
+      background-color: #f2f2f2 !important;
+    }
+    /* Hide long dimension names on print */
+    .print-hidden-text {
+      display: none;
+    }
+    /* Show short names for print */
+    .print-visible-text {
+      display: inline !important;
+    }
+    .sticky {
+        position: static !important;
+    }
+    #root > div > main > div > div {
+      padding: 0 !important;
+    }
+    .print-bar {
+      print-color-adjust: exact !important;
+      -webkit-print-color-adjust: exact !important;
+    }
+  }
+  /* For sr-only accessibility class */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 </style>
 </head>

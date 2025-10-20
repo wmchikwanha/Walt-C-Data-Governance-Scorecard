@@ -1,8 +1,12 @@
 import { SubQuestionResponse, ResponseValue, DimensionScore } from '../types';
 import { RESPONSE_POINTS } from '../constants';
 
-export const calculateDimensionScore = (responses: SubQuestionResponse[]): number | null => {
-    const answered = responses.filter(r => r.response !== ResponseValue.UNANSWERED);
+export const calculateDimensionScore = (dimScore: DimensionScore): number | null => {
+    if (dimScore.overriddenScore !== undefined && dimScore.overriddenScore !== null) {
+        return dimScore.overriddenScore;
+    }
+
+    const answered = dimScore.responses.filter(r => r.response !== ResponseValue.UNANSWERED);
     if (answered.length === 0) return null;
 
     const totalPoints = answered.reduce((sum, r) => sum + RESPONSE_POINTS[r.response], 0);
@@ -12,7 +16,7 @@ export const calculateDimensionScore = (responses: SubQuestionResponse[]): numbe
 };
 
 export const calculateOverallAssessmentScore = (scores: DimensionScore[]): number => {
-    const dimensionScores = scores.map(dimScore => calculateDimensionScore(dimScore.responses));
+    const dimensionScores = scores.map(dimScore => calculateDimensionScore(dimScore));
     const validScores = dimensionScores.filter((s): s is number => s !== null && !isNaN(s));
 
     if (validScores.length === 0) return 0;
