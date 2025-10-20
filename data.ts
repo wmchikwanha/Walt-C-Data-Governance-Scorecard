@@ -18,10 +18,10 @@ import { comparePeriods } from './lib/scoring';
 
 const getFutureDueDate = () => {
     const d = new Date();
-    d.setDate(d.getDate() + 3);
+    d.setDate(d.getDate() + 15); // Extended due date for Q4
     return d;
 }
-const salesDueDate = getFutureDueDate();
+const currentQuarterDueDate = getFutureDueDate();
 
 
 const SEED_USERS: User[] = [
@@ -34,9 +34,9 @@ const SEED_USERS: User[] = [
 
 const SEED_TEMPLATES: AssessmentTemplate[] = [
   {
-    id: 'template-default-q1-2024',
-    name: 'Q1 2024 Standard Assessment',
-    description: 'The standard data governance assessment template for the first quarter of 2024.',
+    id: 'template-default-2025',
+    name: 'Standard Assessment 2025',
+    description: 'The standard data governance assessment template for 2025.',
     dimensions: DEFAULT_DIMENSIONS_DATA,
   },
 ];
@@ -65,61 +65,85 @@ const createRandomizedScores = (dimensions: Dimension[]): DimensionScore[] => {
 };
 
 const SEED_ASSESSMENTS: Assessment[] = [
-  // Engineering - 2 periods
+  // --- Engineering ---
   {
-    id: 'assessment-1',
+    id: 'assessment-eng-q2-2025',
     departmentName: 'Engineering',
-    period: 'Q4 2023',
+    period: 'Q2 2025',
     status: 'Locked',
-    lastSaved: new Date('2023-12-15T10:00:00Z').toISOString(),
+    lastSaved: new Date('2025-06-15T10:00:00Z').toISOString(),
     scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
-    templateId: 'template-default-q1-2024',
-    duration: 3600 + (Math.random() * 1800), // 1hr - 1.5hr
-    dueDate: new Date('2023-12-20T23:59:59Z').toISOString(),
+    templateId: 'template-default-2025',
+    duration: 3600 + (Math.random() * 1800),
+    dueDate: new Date('2025-06-20T23:59:59Z').toISOString(),
   },
   {
-    id: 'assessment-2',
+    id: 'assessment-eng-q3-2025',
     departmentName: 'Engineering',
-    period: 'Q1 2024',
+    period: 'Q3 2025',
     status: 'Submitted',
-    lastSaved: new Date('2024-03-20T14:30:00Z').toISOString(),
+    lastSaved: new Date('2025-09-20T14:30:00Z').toISOString(),
     scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
-    templateId: 'template-default-q1-2024',
-    duration: 3200 + (Math.random() * 1200), // 53min - 1hr 13min
-    dueDate: new Date('2024-03-22T23:59:59Z').toISOString(),
+    templateId: 'template-default-2025',
+    duration: 3200 + (Math.random() * 1200),
+    dueDate: new Date('2025-09-22T23:59:59Z').toISOString(),
   },
-  // Sales - 1 period
-  {
-    id: 'assessment-3',
-    departmentName: 'Sales',
-    period: 'Q1 2024',
+   {
+    id: 'assessment-eng-q4-2025',
+    departmentName: 'Engineering',
+    period: 'Q4 2025',
     status: 'Draft',
     lastSaved: new Date().toISOString(),
     scores: createInitialScores(DEFAULT_DIMENSIONS_DATA),
-    templateId: 'template-default-q1-2024',
-    dueDate: salesDueDate.toISOString(),
+    templateId: 'template-default-2025',
+    dueDate: currentQuarterDueDate.toISOString(),
   },
-   // Human Resources - 1 submitted with notes
+
+  // --- Sales ---
   {
-    id: 'assessment-4',
-    departmentName: 'Human Resources',
-    period: 'Q1 2024',
+    id: 'assessment-sales-q3-2025',
+    departmentName: 'Sales',
+    period: 'Q3 2025',
     status: 'Submitted',
-    lastSaved: new Date('2024-03-18T11:00:00Z').toISOString(),
-    scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA).map((ds, i) => {
-        // Make one dimension incomplete
-        if (i === 2) {
-            return {
-                ...ds,
-                responses: ds.responses.map(r => ({...r, response: ResponseValue.UNANSWERED}))
-            }
-        }
-        return ds;
-    }),
-    templateId: 'template-default-q1-2024',
-    submissionNotes: 'Submitted incomplete due to key personnel being on leave. Will finalize next quarter.',
-    duration: 5500 + (Math.random() * 2000), // ~1.5 - 2 hrs
-    dueDate: new Date('2024-03-20T23:59:59Z').toISOString(),
+    lastSaved: new Date('2025-09-18T11:00:00Z').toISOString(),
+    scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
+    templateId: 'template-default-2025',
+    duration: 4100 + (Math.random() * 1500),
+    dueDate: new Date('2025-09-20T23:59:59Z').toISOString(),
+  },
+  {
+    id: 'assessment-sales-q4-2025',
+    departmentName: 'Sales',
+    period: 'Q4 2025',
+    status: 'Draft',
+    lastSaved: new Date().toISOString(),
+    scores: createInitialScores(DEFAULT_DIMENSIONS_DATA),
+    templateId: 'template-default-2025',
+    dueDate: currentQuarterDueDate.toISOString(),
+  },
+  
+   // --- Human Resources ---
+  {
+    id: 'assessment-hr-q3-2025',
+    departmentName: 'Human Resources',
+    period: 'Q3 2025',
+    status: 'Locked',
+    lastSaved: new Date('2025-09-18T11:00:00Z').toISOString(),
+    scores: createRandomizedScores(DEFAULT_DIMENSIONS_DATA),
+    templateId: 'template-default-2025',
+    submissionNotes: 'Submitted as-is while awaiting final legal review on retention policies.',
+    duration: 5500 + (Math.random() * 2000), 
+    dueDate: new Date('2025-09-20T23:59:59Z').toISOString(),
+  },
+  {
+    id: 'assessment-hr-q4-2025',
+    departmentName: 'Human Resources',
+    period: 'Q4 2025',
+    status: 'Draft',
+    lastSaved: new Date().toISOString(),
+    scores: createInitialScores(DEFAULT_DIMENSIONS_DATA),
+    templateId: 'template-default-2025',
+    dueDate: currentQuarterDueDate.toISOString(),
   },
 ];
 
@@ -127,10 +151,17 @@ const SEED_ASSESSMENTS: Assessment[] = [
 const SEED_CHANGELOG: ChangeLogEntry[] = [
     {
         id: 'cl-1',
-        timestamp: new Date('2023-12-20T09:00:00Z').toISOString(),
+        timestamp: new Date('2025-06-22T09:00:00Z').toISOString(),
         user: 'Diana Prince',
         changeDescription: 'Locked assessment for Engineering',
-        period: 'Q4 2023',
+        period: 'Q2 2025',
+    },
+    {
+        id: 'cl-2',
+        timestamp: new Date('2025-09-25T11:00:00Z').toISOString(),
+        user: 'Diana Prince',
+        changeDescription: 'Locked assessment for Human Resources',
+        period: 'Q3 2025',
     }
 ];
 
@@ -139,7 +170,7 @@ const SEED_NOTIFICATIONS: AppNotification[] = [
         id: 'notif-1',
         userId: 'user-2', // For Bob Williams (Engineering)
         senderName: 'Diana Prince',
-        subject: 'Q1 2024 Assessment Review',
+        subject: 'Q4 2025 Assessment Review',
         message: 'Hi Bob, please take a look at the comments on the "How Clean Is Our Data?" dimension and provide feedback by EOD Friday. Thanks!',
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
         read: false,
@@ -149,7 +180,7 @@ const SEED_NOTIFICATIONS: AppNotification[] = [
         userId: 'user-1', // Alice Johnson (Sales)
         senderName: 'System Automation',
         subject: 'Reminder: Assessment Due Soon',
-        message: `Your assessment for the Sales department is due on ${salesDueDate.toLocaleDateString()}. Please ensure it is submitted on time.`,
+        message: `Your Q4 2025 assessment for the Sales department is due on ${currentQuarterDueDate.toLocaleDateString()}. Please ensure it is submitted on time.`,
         timestamp: new Date().toISOString(),
         read: false,
     }
@@ -278,7 +309,7 @@ export const api = {
     const newAssessment: Assessment = {
         id: `assessment-${Date.now()}`,
         departmentName,
-        period: "Q1 2024", // Default period for new departments
+        period: "Q4 2025", // Default period for new departments
         status: 'Draft',
         lastSaved: new Date().toISOString(),
         scores: createInitialScores(defaultTemplate.dimensions),
