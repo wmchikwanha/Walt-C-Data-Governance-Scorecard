@@ -49,11 +49,8 @@
     animation: fadeInUp 0.4s ease-in-out;
   }
   @media print {
-    body {
-      background-color: white !important;
-    }
-    .no-print {
-      display: none !important;
+    body * {
+      visibility: hidden;
     }
     .printable-area,
     .printable-area * {
@@ -61,12 +58,18 @@
     }
     .printable-area {
       position: absolute;
-      left: 20px;
-      top: 20px;
-      right: 20px;
-      width: auto;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 20px;
       box-shadow: none !important;
       border: none !important;
+    }
+    body {
+      background-color: white !important;
+    }
+    .no-print {
+      display: none !important;
     }
     table {
       border-collapse: collapse !important;

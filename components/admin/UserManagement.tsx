@@ -12,11 +12,13 @@ interface EditableUser extends User {
 }
 
 const UserManagement: React.FC = () => {
-    const [users, setUsers] = useState<EditableUser[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const { addNotification } = useNotification();
     
+    // State for editing a user inline
+    const [editingUser, setEditingUser] = useState<EditableUser | null>(null);
+
     // State for creating a new user
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newUser, setNewUser] = useState<Partial<User> & { departmentName?: string }>({ 
@@ -58,52 +60,48 @@ const UserManagement: React.FC = () => {
         fetchUsersAndTemplates();
     }, [fetchUsersAndTemplates]);
 
-    const handleEdit = (user: EditableUser) => {
-        setEditingUserId(user.id);
-        setUsers(currentUsers => currentUsers.map(u => 
-            u.id === user.id ? { ...u, originalName: u.name, originalEmail: u.email } : u
-        ));
+    const handleEdit = (user: User) => {
+        setEditingUser({ ...user, originalName: user.name, originalEmail: user.email });
     };
 
-    const handleCancel = (userId: string) => {
-        setEditingUserId(null);
-        setUsers(currentUsers => currentUsers.map(u => 
-            u.id === userId ? { ...u, name: u.originalName || u.name, email: u.originalEmail || u.email } : u
-        ));
-    };
+    const handleCancel = useCallback(() => {
+        setEditingUser(null);
+    }, []);
 
-    const handleSave = async (user: EditableUser) => {
-        if (!user.name || user.name.trim() === '') {
+    const handleSave = useCallback(async () => {
+        if (!editingUser) return;
+
+        if (!editingUser.name || editingUser.name.trim() === '') {
             addNotification({ message: 'Name cannot be empty.', type: 'error' });
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(user.email)) {
+        if (!emailRegex.test(editingUser.email)) {
             addNotification({ message: 'Please enter a valid email address.', type: 'error' });
             return;
         }
 
         try {
-            await api.updateUser(user.id, { name: user.name, email: user.email });
+            await api.updateUser(editingUser.id, { name: editingUser.name, email: editingUser.email });
             addNotification({ message: 'User updated successfully.', type: 'success' });
-            setEditingUserId(null);
+            setUsers(currentUsers => currentUsers.map(u => 
+                u.id === editingUser.id ? { ...u, name: editingUser.name, email: editingUser.email } : u
+            ));
+            setEditingUser(null);
         } catch (error) {
             addNotification({ message: 'Failed to update user.', type: 'error' });
-            handleCancel(user.id);
         }
-    };
+    }, [editingUser, addNotification]);
     
-    const handleInputChange = (userId: string, field: 'name' | 'email', value: string) => {
-        setUsers(currentUsers => currentUsers.map(u => 
-            u.id === userId ? { ...u, [field]: value } : u
-        ));
+    const handleEditingUserInputChange = (field: 'name' | 'email', value: string) => {
+        setEditingUser(current => current ? { ...current, [field]: value } : null);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
         setNewUser({ name: '', email: '', role: UserRole.DEPARTMENT_HEAD, departmentName: '' });
-    };
+    }, []);
 
     const handleNewUserInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -199,36 +197,39 @@ const UserManagement: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user) => (
-                            <tr key={user.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingUserId === user.id ? (
-                                        <input type="text" value={user.name} onChange={(e) => handleInputChange(user.id, 'name', e.target.value)} className={inputClass} />
-                                    ) : (
-                                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingUserId === user.id ? (
-                                        <input type="email" value={user.email} onChange={(e) => handleInputChange(user.id, 'email', e.target.value)} className={inputClass} />
-                                    ) : (
-                                        <div className="text-sm text-gray-500">{user.email}</div>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.departmentName || 'N/A'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    {editingUserId === user.id ? (
-                                        <div className="flex items-center space-x-2">
-                                            <button onClick={() => handleSave(user)} className="text-green-600 hover:text-green-900" title="Save"><CheckIcon className="h-5 w-5" /></button>
-                                            <button onClick={() => handleCancel(user.id)} className="text-red-600 hover:text-red-900" title="Cancel"><XMarkIcon className="h-5 w-5" /></button>
-                                        </div>
-                                    ) : (
-                                        <button onClick={() => handleEdit(user)} className="text-brand-primary hover:text-brand-secondary" title="Edit User"><PencilIcon className="h-5 w-5" /></button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
+                        {users.map((user) => {
+                            const isEditing = editingUser?.id === user.id;
+                            return (
+                                <tr key={user.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {isEditing ? (
+                                            <input type="text" value={editingUser.name} onChange={(e) => handleEditingUserInputChange('name', e.target.value)} className={inputClass} />
+                                        ) : (
+                                            <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {isEditing ? (
+                                            <input type="email" value={editingUser.email} onChange={(e) => handleEditingUserInputChange('email', e.target.value)} className={inputClass} />
+                                        ) : (
+                                            <div className="text-sm text-gray-500">{user.email}</div>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.departmentName || 'N/A'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        {isEditing ? (
+                                            <div className="flex items-center space-x-2">
+                                                <button onClick={handleSave} className="text-green-600 hover:text-green-900" title="Save"><CheckIcon className="h-5 w-5" /></button>
+                                                <button onClick={handleCancel} className="text-red-600 hover:text-red-900" title="Cancel"><XMarkIcon className="h-5 w-5" /></button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => handleEdit(user)} className="text-brand-primary hover:text-brand-secondary" title="Edit User"><PencilIcon className="h-5 w-5" /></button>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

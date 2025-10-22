@@ -19,6 +19,13 @@ const UserProfile: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            addNotification({ message: 'Please enter a valid email address.', type: 'error' });
+            return;
+        }
+        
         setIsSaving(true);
         try {
             const updatedUser = await api.updateUser(user.id, { name, email });
@@ -45,6 +52,7 @@ const UserProfile: React.FC = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+                                required
                             />
                         </div>
                         <div>
@@ -55,6 +63,7 @@ const UserProfile: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+                                required
                             />
                         </div>
                         <div>
